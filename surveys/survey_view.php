@@ -23,26 +23,16 @@ if(isset($_GET['id']) && (int)$_GET['id'] > 0){#proper data must be on querystri
     header('Location:' . VIRTUAL_PATH . 'surveys/index.php');
 }
 
-//sql statement to select individual item
-$sql = "select Title,Description from sp16_surveys where SurveyID = " . $myID;
+
 //---end config area --------------------------------------------------
 
 $foundRecord = FALSE; # Will change to true, if record found!
    
-# connection comes first in mysqli (improved) function
-$result = mysqli_query(IDB::conn(),$sql) or die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
+//create class here
+$mySurvey = new Survey($id);
 
-if(mysqli_num_rows($result) > 0)
-{#records exist - process
-	   $foundRecord = TRUE;	
-	   while ($row = mysqli_fetch_assoc($result))
-	   {
-			$Title = dbOut($row['Title']);
-			$Description = dbOut($row['Description']);
-	   }
-}
+dumpDie($mySurvey);
 
-@mysqli_free_result($result); # We're done with the data!
 
 if($foundRecord)
 {#only load data if record found
@@ -77,4 +67,41 @@ else{//no such survey!
 }
 echo '<div align="center"><a href="' . VIRTUAL_PATH . 'surveys/index.php">Go Back</a></div>';
 get_footer(); #defaults to theme footer or footer_inc.php
-?>
+
+
+class Survey
+{
+	
+	public $Title = '';
+	public $Description = '';
+	public $SurveyID = 0;
+	public $isValid = false;
+	
+	function __construct($id)
+	{
+		$id = (int)$id; 
+		
+		//sql statement to select individual item
+		$sql = "select Title,Description from sp16_surveys where SurveyID = " . $id;
+		
+			# connection comes first in mysqli (improved) function
+			$result = mysqli_query(IDB::conn(),$sql) or die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
+			
+			if(mysqli_num_rows($result) > 0)
+			{#records exist - process
+				   $this->isValid = true;//survey exists
+				   $foundRecord = TRUE;	
+				   while ($row = mysqli_fetch_assoc($result))
+				   {
+						$this->Title = dbOut($row['Title']);
+						$this->Description = dbOut($row['Description']);
+				   }
+			}
+			
+			@mysqli_free_result($result); # We're done with the data!
+
+		
+		
+	}//end constructor
+	
+}//end survey class
